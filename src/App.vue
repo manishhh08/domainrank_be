@@ -2,21 +2,14 @@
   <div class="min-h-screen bg-gray-100">
     <Header />
 
-    <main class="max-w-3xl mx-auto px-4 mt-12">
-      <h1 class="text-2xl font-bold text-center mb-5">
-        Welcome to the domain ranking checker. We show the latest ranking of
-        popular domains in the world.
-      </h1>
-
+    <main class="max-w-4xl mx-auto px-4 mt-12">
       <DomainSearch
         :loading="loading"
-        :result-domain="resultDomain"
-        :result-rank="resultRank"
+        :results="results"
         @search="handleSearch"
       />
 
-      <DomainChart :labels="chartLabels" :data="chartData" />
-      <!-- <DomainChart /> -->
+      <DomainChart :labels="chartLabels" :datasets="chartDataSets" />
     </main>
   </div>
 </template>
@@ -29,35 +22,69 @@ import DomainChart from "./components/DomainChart.vue";
 import { useDomain } from "./services/useDomain";
 import { DomainResult } from "./types/domain";
 
-const resultDomain = ref<string | null>(null);
-const resultRank = ref<number | null>(null);
 const loading = ref(false);
+const results = ref<DomainResult[]>([]);
 
-const { fetchMultipleDomain, error } = useDomain();
+const chartLabels = ref<string[]>([]);
+const chartDataSets = ref<
+  {
+    label: string;
+    data: (number | null)[];
+    borderColor: string;
+    backgroundColor: string;
+    tension: number;
+  }[]
+>([]);
 
-const handleSearch = async (domain: string) => {
+// Colors for multiple lines
+const colors = ["#16a34a", "#2563eb", "#dc2626", "#f59e0b", "#8b5cf6"];
+
+const { fetchMultipleDomain } = useDomain();
+
+const handleSearch = async (domainInput: string) => {
   loading.value = true;
-  resultDomain.value = null;
-  resultRank.value = null;
+  results.value = [];
+  chartLabels.value = [];
+  chartDataSets.value = [];
+
+  const domains = domainInput
+    .split(",")
+    .map((d) => d.trim())
+    .filter(Boolean);
+
+  if (!domains.length) {
+    loading.value = false;
+    return;
+  }
 
   try {
-    const results: DomainResult[] = await fetchMultipleDomain([domain]);
-    if (results.length) {
-      resultDomain.value = results[0].domain;
-      resultRank.value = results[0].rank;
-    } else {
-      resultDomain.value = domain;
-      resultRank.value = null;
-    }
-  } catch (error) {
-    console.log(error);
+    const fetchedResults: DomainResult[] = await fetchMultipleDomain(domains);
 
-    resultDomain.value = domain;
-    resultRank.value = null;
+    if (!fetchedResults.length) return;
+
+    results.value = fetchedResults;
+
+    const allDatesSet = new Set<string>();
+    fetchedResults.forEach((r) =>
+      r.history.forEach((h) => allDatesSet.add(h.date))
+    );
+    const allDates = Array.from(allDatesSet).sort();
+    chartLabels.value = allDates;
+
+    chartDataSets.value = fetchedResults.map((r, idx) => ({
+      label: r.domain,
+      data: allDates.map((d) => {
+        const h = r.history.find((h) => h.date === d);
+        return h ? h.rank : null;
+      }),
+      borderColor: colors[idx % colors.length],
+      backgroundColor: colors[idx % colors.length] + "33",
+      tension: 0.4,
+    }));
+  } catch (err) {
+    console.error(err);
   } finally {
     loading.value = false;
   }
 };
-const chartLabels = ref<string[]>([]);
-const chartData = ref<number[]>([]);
 </script>

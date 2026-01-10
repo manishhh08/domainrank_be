@@ -9,7 +9,7 @@
       <input
         v-model="domain"
         type="text"
-        placeholder="Enter domain (e.g. yourname.com)"
+        placeholder="Enter domains (e.g. yourfirstname.com, yourlastname.com)"
         class="flex-1 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
         @keyup.enter="search"
       />
@@ -27,22 +27,31 @@
     </div>
 
     <!-- result text area -->
-    <div v-if="resultDomain" class="mt-4 text-sm text-gray-700">
-      Latest rank for
-      <span class="font-semibold text-gray-900">{{ resultDomain }}</span
-      >:
-      <span class="font-bold text-green-600">{{ resultRank ?? "N/A" }}</span>
+    <div v-if="results.length" class="mt-4 space-y-2">
+      <div
+        v-for="r in results"
+        :key="r.domain"
+        class="flex items-center m-2 space-x-2"
+      >
+        <span>
+          Latest rank for <span class="font-semibold">{{ r.domain }}</span
+          >:
+        </span>
+        <span class="font-bold text-green-600">
+          {{ r.rank ?? "N/A" }}
+        </span>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { DomainResult } from "../types/domain";
 
 const props = defineProps<{
   loading: boolean;
-  resultDomain: string | null;
-  resultRank: number | null;
+  results: DomainResult[];
 }>();
 
 const domain = ref("");
@@ -50,6 +59,7 @@ const emit = defineEmits<{ (e: "search", domain: string): void }>();
 
 const search = () => {
   if (!domain.value) {
+    alert("Please enter at least one domain name.");
     return;
   }
 
