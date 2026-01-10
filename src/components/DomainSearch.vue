@@ -59,7 +59,9 @@ const emit = defineEmits<{ (e: "search", domain: string): void }>();
 
 const search = () => {
   if (!domain.value) {
-    alert("Please enter at least one domain");
+    alert("Please enter at least one domain name.");
+return;
+}
   const normalizedDomain = domain.value.trim().toLowerCase();
 
   emit("search", normalizedDomain);
