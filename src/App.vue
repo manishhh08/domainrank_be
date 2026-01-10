@@ -37,7 +37,23 @@ const chartDataSets = ref<
 >([]);
 
 // Colors for multiple lines
-const colors = ["#16a34a", "#2563eb", "#dc2626", "#f59e0b", "#8b5cf6"];
+const colors = [
+  "#16a34a",
+  "#2563eb",
+  "#dc2626",
+  "#f59e0b",
+  "#8b5cf6",
+  "#d946ef",
+  "#14b8a6",
+  "#f43f5e",
+  "#eab308",
+  "#0ea5e9",
+  "#84cc16",
+  "#f97316",
+  "#c026d3",
+  "#22c55e",
+  "#1e3a8a",
+];
 
 const { fetchMultipleDomain } = useDomain();
 
@@ -80,6 +96,7 @@ const handleSearch = async (domainInput: string) => {
       borderColor: colors[idx % colors.length],
       backgroundColor: colors[idx % colors.length] + "33",
       tension: 0.4,
+      baselineRank: r.history[0]?.rank,
     }));
   } catch (err) {
     console.error(err);
